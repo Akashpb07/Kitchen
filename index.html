@@ -43,6 +43,7 @@
             justify-content: center;
             margin-top: 10px;
             gap: 5px;
+            flex-wrap: wrap; /* Allow buttons to wrap */
         }
 
         .list-btn {
@@ -54,6 +55,7 @@
             cursor: pointer;
             font-size: 0.9em;
             transition: background-color 0.2s, border-color 0.2s;
+            white-space: nowrap; /* Prevent text wrapping */
         }
 
         .list-btn.active, .list-btn:hover {
@@ -408,11 +410,7 @@
     <header class="app-header">
         <h1>Home Essentials</h1>
         <div class="list-navigation" id="listNavigation">
-            <button class="list-btn active" data-list="list1">List 1</button>
-            <button class="list-btn" data-list="list2">List 2</button>
-            <button class="list-btn" data-list="list3">List 3</button>
-            <button class="list-btn" id="addListBtn"><i class="fas fa-plus"></i></button>
-        </div>
+            </div>
     </header>
 
     <main class="app-container">
@@ -477,13 +475,13 @@
             const saveButton = document.getElementById('saveButton');
             const totalSummaryButton = document.getElementById('totalSummaryButton');
             const listNavigation = document.getElementById('listNavigation');
-            const addListBtn = document.getElementById('addListBtn');
+            let addListBtn; // Declared here, will be assigned after initial buttons are created
 
             let currentTotalPrice = 0;
             let customItemCounter = 0; // To give unique IDs to custom items
             let activeListKey = 'list1'; // Default active list
 
-            // --- Pre-defined item list ---
+            // --- Pre-defined item list (This list remains the source for initial item data) ---
             const predefinedItems = [
                 // Appliances
                 { id: 'induction', name: 'Induction', price: 3000, category: 'appliances', type: 'appliance' },
@@ -527,37 +525,32 @@
 
             const saveCurrentListState = () => {
                 const listState = {
-                    items: [],
-                    customItems: []
+                    items: [], // Stores state of predefined items
+                    customItems: [] // Stores custom added items
                 };
 
-                // Capture state of predefined items
+                // Capture state of ALL items currently in the DOM
                 document.querySelectorAll('.item-row').forEach(row => {
                     const itemId = row.dataset.itemId;
                     const checkbox = row.querySelector('.item-checkbox');
                     const priceInput = row.querySelector('.item-price-input');
-                    const itemType = row.dataset.itemType; // 'predefined' or 'custom'
+                    const itemType = row.dataset.itemType;
+
+                    const priceValue = priceInput.value.trim() === '' ? null : parseFloat(priceInput.value);
 
                     if (itemType === 'custom') {
                         listState.customItems.push({
                             id: itemId,
                             name: row.querySelector('.item-name').textContent,
-                            price: parseFloat(priceInput.value) || null, // Store null if empty/invalid
+                            price: priceValue,
                             checked: checkbox.checked
                         });
-                    } else {
-                        // For predefined items, only save if checked OR if it's an appliance with a custom price
-                        // OR if it's an appliance where price was initially null and user entered something
-                        const originalItem = predefinedItems.find(item => item.id === itemId);
-                        const currentPrice = parseFloat(priceInput.value) || null;
-
-                        if (checkbox.checked || (originalItem && originalItem.price === null && currentPrice !== null) || (originalItem && originalItem.price !== currentPrice)) {
-                             listState.items.push({
-                                id: itemId,
-                                price: currentPrice,
-                                checked: checkbox.checked
-                            });
-                        }
+                    } else { // Predefined item
+                        listState.items.push({
+                            id: itemId,
+                            price: priceValue, // Save current price input value (even if null or modified from default)
+                            checked: checkbox.checked
+                        });
                     }
                 });
                 localStorage.setItem(LOCAL_STORAGE_PREFIX + activeListKey, JSON.stringify(listState));
@@ -565,20 +558,29 @@
             };
 
             const loadListState = (listKey) => {
-                const savedState = localStorage.getItem(LOCAL_STORAGE_PREFIX + listKey);
                 currentTotalPrice = 0;
-                
-                // Clear all current items (predefined and custom)
-                appliancesCategory.innerHTML = '<h2>Appliances</h2>';
-                kitchenCategory.innerHTML = '<h2>Kitchen & Utensils</h2>';
-                otherCategory.innerHTML = '<h2>Other Essentials</h2>';
-                customItemsContainer.innerHTML = '';
-                customItemCounter = 0; // Reset for new custom items
 
-                // Re-render predefined items first with their original values
+                // Clear all current items (predefined and custom)
+                const clearCategory = (categoryElement) => {
+                    Array.from(categoryElement.children).forEach(child => {
+                        if (child.tagName.toLowerCase() !== 'h2') { // Keep the H2 category title
+                            child.remove();
+                        }
+                    });
+                }
+                clearCategory(appliancesCategory);
+                clearCategory(kitchenCategory);
+                clearCategory(otherCategory);
+                customItemsContainer.innerHTML = '';
+                customItemCounter = 0; // Reset for new custom items IDs
+
+                const savedState = localStorage.getItem(LOCAL_STORAGE_PREFIX + listKey);
+
+                // --- First, load predefined items as they are in the `predefinedItems` array ---
+                // This ensures all original items are available, even if not saved or unchecked.
                 predefinedItems.forEach(item => {
                     const itemRow = createItemRow(item);
-                    itemRow.dataset.itemType = 'predefined'; // Mark as predefined
+                    itemRow.dataset.itemType = 'predefined';
                     if (item.category === 'appliances') {
                         appliancesCategory.appendChild(itemRow);
                     } else if (item.category === 'kitchen') {
@@ -588,28 +590,31 @@
                     }
                 });
 
+                // --- Then, apply saved state on top of the predefined items ---
                 if (savedState) {
                     const parsedState = JSON.parse(savedState);
 
                     // Apply saved state to predefined items
                     parsedState.items.forEach(savedItem => {
-                        const itemRow = document.querySelector(`[data-item-id="${savedItem.id}"]`);
+                        const itemRow = document.querySelector(`[data-item-id="${savedItem.id}"][data-item-type="predefined"]`);
                         if (itemRow) {
                             const checkbox = itemRow.querySelector('.item-checkbox');
                             const priceInput = itemRow.querySelector('.item-price-input');
-                            
+
                             checkbox.checked = savedItem.checked;
-                            
-                            // If a price was saved, update the input field and data-item-price
+
+                            // Update price input and data attribute
                             if (savedItem.price !== null) {
                                 priceInput.value = savedItem.price;
                                 itemRow.dataset.itemPrice = savedItem.price;
+                                itemRow.dataset.lastValidPrice = savedItem.price; // Set lastValidPrice for calculations
                             } else {
-                                priceInput.value = ''; // Ensure it's empty if saved as null
+                                priceInput.value = '';
                                 itemRow.dataset.itemPrice = null;
+                                itemRow.dataset.lastValidPrice = 0;
                             }
 
-                            // If item is checked, add its current price to total
+                            // If this item is checked, add its price to the total
                             if (checkbox.checked) {
                                 const price = parseFloat(itemRow.dataset.itemPrice);
                                 if (!isNaN(price) && price > 0) {
@@ -621,8 +626,11 @@
 
                     // Load custom items
                     parsedState.customItems.forEach(customItemData => {
-                        // Ensure unique IDs for loaded custom items if counter was reset
-                        customItemCounter = Math.max(customItemCounter, parseInt(customItemData.id.split('-')[1] || 0));
+                        // Ensure unique IDs for loaded custom items (important if list was emptied or if multiple custom items)
+                        const currentMaxCustomId = parseInt((customItemData.id || 'custom-0').split('-')[1]);
+                        if (!isNaN(currentMaxCustomId)) {
+                             customItemCounter = Math.max(customItemCounter, currentMaxCustomId);
+                        }
 
                         const customItem = {
                             id: customItemData.id,
@@ -634,8 +642,8 @@
                         };
                         const itemRow = createItemRow(customItem);
                         customItemsContainer.appendChild(itemRow);
-                        
-                        // Manually set checked state and update total
+
+                        // If custom item is checked, add its price to the total
                         const checkbox = itemRow.querySelector('.item-checkbox');
                         if(checkbox.checked) {
                              const price = parseFloat(itemRow.dataset.itemPrice);
@@ -644,9 +652,11 @@
                              }
                         }
                     });
-                    customItemCounter++; // Increment for the next new custom item
+                     // Increment customItemCounter AFTER loading all to ensure new custom IDs are unique
+                    customItemCounter++;
                 }
                 updateTotal();
+                console.log(`State loaded for ${activeListKey}`);
             };
 
             // --- UI Functions ---
@@ -661,10 +671,12 @@
                 itemRow.dataset.itemId = item.id;
                 itemRow.dataset.itemType = item.type || 'predefined'; // Set data type
                 itemRow.dataset.itemPrice = item.price; // Store price as data attribute
+                itemRow.dataset.lastValidPrice = (item.price !== null && !isNaN(item.price)) ? item.price : 0; // Initialize lastValidPrice
 
                 const checkboxId = `item-${item.id}`;
                 const initialPriceValue = item.price !== null ? item.price : '';
-                const isPriceReadonly = item.price !== null && item.type !== 'custom'; // Custom items are always editable
+                // Predefined items with a price are readonly, custom items and predefined items with null price are editable
+                const isPriceReadonly = item.price !== null && item.type !== 'custom';
 
                 itemRow.innerHTML = `
                     <label for="${checkboxId}" class="item-checkbox-label">
@@ -677,7 +689,7 @@
                         <input type="number"
                                class="item-price-input"
                                value="${initialPriceValue}"
-                               placeholder="${item.price === null ? 'Enter Price (optional)' : ''}"
+                               placeholder="${item.price === null || item.type === 'custom' ? 'Price (optional)' : ''}"
                                ${isPriceReadonly ? 'readonly' : ''}>
                     </div>
                     ${item.type === 'custom' ? '<button class="delete-item-btn"><i class="fas fa-trash-alt"></i></button>' : ''}
@@ -689,83 +701,67 @@
 
                 checkbox.addEventListener('change', () => {
                     const newPrice = parseFloat(priceInput.value);
+                    const currentItemPrice = isNaN(newPrice) ? 0 : newPrice; // Treat empty/invalid price as 0 for calculation
+
                     if (checkbox.checked) {
-                        if (!isNaN(newPrice) && newPrice > 0) {
-                            currentTotalPrice += newPrice;
-                        } else if (priceInput.value.trim() !== '') { // If a non-numeric value was entered, alert
-                            checkbox.checked = false;
-                            alert('Please enter a valid positive price, or leave it empty.');
-                        } else { // Price is empty, but item is checked. Treat as 0 for calculation.
-                            // No change to total
-                        }
-                    } else { // Unchecked
-                        if (!isNaN(newPrice) && newPrice > 0) {
-                            currentTotalPrice -= newPrice;
-                        }
+                        currentTotalPrice += currentItemPrice;
+                        itemRow.dataset.lastValidPrice = currentItemPrice; // Update last valid price on check
+                    } else {
+                        currentTotalPrice -= currentItemPrice;
+                        itemRow.dataset.lastValidPrice = 0; // Reset last valid price on uncheck
                     }
                     updateTotal();
-                    saveCurrentListState(); // Save state on every change
+                    saveCurrentListState();
                 });
 
                 priceInput.addEventListener('input', () => {
-                    // Update the data attribute immediately to reflect current value for calculations
-                    itemRow.dataset.itemPrice = priceInput.value.trim() === '' ? null : parseFloat(priceInput.value);
+                    const oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
+                    const currentInputPrice = parseFloat(priceInput.value);
 
-                    // If checked, recalculate total based on new input
+                    // Update data-item-price attribute with the current input value (numeric or null)
+                    itemRow.dataset.itemPrice = priceInput.value.trim() === '' ? null : currentInputPrice;
+
                     if (checkbox.checked) {
-                        let oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
-                        let currentInputPrice = parseFloat(priceInput.value);
-
-                        if (!isNaN(currentInputPrice) && currentInputPrice > 0) {
+                        if (!isNaN(currentInputPrice)) { // If input is a number (even 0 or negative for now)
                             currentTotalPrice = currentTotalPrice - oldPrice + currentInputPrice;
-                            itemRow.dataset.lastValidPrice = currentInputPrice; // Store for next change
-                        } else if (oldPrice > 0) { // If input became invalid/empty, subtract old valid price
+                            itemRow.dataset.lastValidPrice = currentInputPrice; // Update last valid price
+                        } else { // Input is not a number (e.g., deleted text)
                             currentTotalPrice -= oldPrice;
                             itemRow.dataset.lastValidPrice = 0; // Reset last valid price
                         }
                     }
                     updateTotal();
-                    saveCurrentListState(); // Save state on every input
+                    saveCurrentListState();
                 });
 
                 priceInput.addEventListener('blur', () => {
                     const value = priceInput.value.trim();
                     if (value !== '') {
                         const numericValue = parseFloat(value);
-                        if (isNaN(numericValue) || numericValue < 0) { // Allow 0, but discourage negative
-                            priceInput.value = ''; // Clear invalid input
-                            itemRow.dataset.itemPrice = null; // Update data attribute
-                            // If checkbox was checked, uncheck it and remove its contribution
-                            if (checkbox.checked) {
-                                checkbox.checked = false;
-                                const oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
-                                currentTotalPrice -= oldPrice;
-                                itemRow.dataset.lastValidPrice = 0;
-                                updateTotal();
-                            }
+                        if (isNaN(numericValue) || numericValue < 0) {
                             alert('Please enter a valid non-negative number for the price, or leave it empty.');
-                        } else if (numericValue === 0) {
-                            // If user explicitly enters 0, treat it as such
-                            itemRow.dataset.itemPrice = 0;
-                            if (checkbox.checked && parseFloat(itemRow.dataset.lastValidPrice || 0) > 0) {
-                                currentTotalPrice -= parseFloat(itemRow.dataset.lastValidPrice);
-                                itemRow.dataset.lastValidPrice = 0;
+                            priceInput.value = ''; // Clear invalid input
+                            itemRow.dataset.itemPrice = null;
+                            itemRow.dataset.lastValidPrice = 0;
+                            if (checkbox.checked) {
+                                checkbox.checked = false; // Uncheck if price becomes invalid
+                                // Price was already subtracted by input event if checkbox was checked
                             }
-                            updateTotal();
                         } else {
-                            // Valid number, update lastValidPrice
-                             itemRow.dataset.lastValidPrice = numericValue;
+                            itemRow.dataset.itemPrice = numericValue;
+                            itemRow.dataset.lastValidPrice = numericValue;
+                            // Re-evaluate total if checkbox is checked and price was changed from invalid/empty to valid
+                            if (checkbox.checked) {
+                                // If the checkbox was already checked, the input event handler would have updated total.
+                                // If it was unchecked, and user makes valid input and then checks it, it will be added.
+                            }
                         }
-                    } else {
-                        // Input is empty. If checked, subtract any previously valid price.
+                    } else { // Input is empty
                         itemRow.dataset.itemPrice = null;
-                        if (checkbox.checked) {
-                            const oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
-                            currentTotalPrice -= oldPrice;
-                            itemRow.dataset.lastValidPrice = 0; // Reset
-                            updateTotal();
-                        }
+                        itemRow.dataset.lastValidPrice = 0;
+                        // If checkbox was checked, price was already removed by input event
                     }
+                    updateTotal();
                     saveCurrentListState();
                 });
 
@@ -777,41 +773,31 @@
                         }
                         itemRow.remove();
                         updateTotal();
-                        saveCurrentListState(); // Save state after deleting
+                        saveCurrentListState();
                     });
-                }
-                
-                // Set initial lastValidPrice for checked items
-                if (checkbox.checked) {
-                    const initialPrice = parseFloat(priceInput.value);
-                    if (!isNaN(initialPrice) && initialPrice > 0) {
-                        itemRow.dataset.lastValidPrice = initialPrice;
-                    } else {
-                        itemRow.dataset.lastValidPrice = 0;
-                    }
                 }
 
                 return itemRow;
             };
 
             // --- List Navigation Logic ---
-            let listCounter = 3; // Start from 3 because List1, List2, List3 are initial
+            let listCounter = 0; // Will be updated to max existing list number + 1
 
-            const createListButton = (listName, key) => {
+            const createListButton = (listName, key, isActive = false) => {
                 const button = document.createElement('button');
-                button.className = 'list-btn';
+                button.className = `list-btn ${isActive ? 'active' : ''}`;
                 button.dataset.list = key;
                 button.textContent = listName;
-                listNavigation.insertBefore(button, addListBtn); // Insert before "Add List" button
+                listNavigation.insertBefore(button, addListBtn);
 
                 button.addEventListener('click', () => {
                     switchList(key);
                 });
+                return button;
             };
 
             const switchList = (newListKey) => {
-                // Save current list's state before switching
-                saveCurrentListState();
+                saveCurrentListState(); // Save old list state
 
                 // Deactivate current active button
                 document.querySelector(`.list-btn.active`)?.classList.remove('active');
@@ -821,35 +807,49 @@
 
                 activeListKey = newListKey;
                 loadListState(activeListKey);
+                localStorage.setItem('activeList', activeListKey); // Save which list was last active
             };
 
             const initializeListNavigation = () => {
-                // Create initial list buttons (if not already there by HTML)
-                // This assumes List1, List2, List3 are already in HTML
-                const existingListBtns = document.querySelectorAll('.list-btn[data-list^="list"]');
-                existingListBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        switchList(btn.dataset.list);
-                    });
+                // Initial lists (List 1, List 2, List 3)
+                const initialListKeys = ['list1', 'list2', 'list3'];
+                initialListKeys.forEach((key, index) => {
+                    createListButton(`List ${index + 1}`, key);
                 });
 
-                // Load all existing list keys from local storage to re-create buttons
+                // Add "Add List" button
+                addListBtn = document.createElement('button');
+                addListBtn.id = 'addListBtn';
+                addListBtn.className = 'list-btn';
+                addListBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                listNavigation.appendChild(addListBtn);
+
+                addListBtn.addEventListener('click', () => {
+                    listCounter++; // Increment counter for new list number
+                    const newListKey = `list${listCounter}`;
+                    createListButton(`List ${listCounter}`, newListKey, true); // Create and activate
+                    switchList(newListKey);
+                });
+
+                // Discover existing lists from local storage and create buttons for them
+                let maxExistingListNum = 3; // Start from 3 as list1,2,3 are default
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key.startsWith(LOCAL_STORAGE_PREFIX) && !key.includes('list1') && !key.includes('list2') && !key.includes('list3')) {
+                    if (key.startsWith(LOCAL_STORAGE_PREFIX)) {
                         const listId = key.replace(LOCAL_STORAGE_PREFIX, '');
-                        // Check if a button for this list already exists to avoid duplicates
-                        if (!document.querySelector(`[data-list="${listId}"]`)) {
-                             const listNum = parseInt(listId.replace('list', ''));
-                             if (!isNaN(listNum)) {
-                                 createListButton(`List ${listNum}`, listId);
-                                 listCounter = Math.max(listCounter, listNum);
-                             }
+                        // If it's a "listN" format and not one of the initial ones already created
+                        if (listId.startsWith('list') && !initialListKeys.includes(listId)) {
+                            const listNum = parseInt(listId.replace('list', ''));
+                            if (!isNaN(listNum)) {
+                                createListButton(`List ${listNum}`, listId);
+                                maxExistingListNum = Math.max(maxExistingListNum, listNum);
+                            }
                         }
                     }
                 }
+                listCounter = maxExistingListNum; // Ensure new lists start from the next number
 
-                // Set initial active list
+                // Set initial active list based on saved preference or default to list1
                 const storedActiveList = localStorage.getItem('activeList');
                 if (storedActiveList && document.querySelector(`[data-list="${storedActiveList}"]`)) {
                     switchList(storedActiveList);
@@ -858,17 +858,11 @@
                 }
             };
 
-            addListBtn.addEventListener('click', () => {
-                listCounter++;
-                const newListKey = `list${listCounter}`;
-                createListButton(`List ${listCounter}`, newListKey);
-                switchList(newListKey);
-            });
 
             // --- Event Listeners ---
             addItemButton.addEventListener('click', () => {
                 const name = newItemNameInput.value.trim();
-                const price = parseFloat(newItemPriceInput.value) || null; // Price can be null if empty
+                const price = newItemPriceInput.value.trim() === '' ? null : parseFloat(newItemPriceInput.value);
 
                 if (!name) {
                     alert('Please enter an item name.');
@@ -908,14 +902,14 @@
             });
 
             resetButton.addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset the current list (all selections and custom items)?')) {
+                if (confirm(`Are you sure you want to reset the current list (${activeListKey})? All selections and custom items will be cleared.`)) {
+                    // This is for a full reset of the current list's UI and data
                     currentTotalPrice = 0;
                     updateTotal();
 
-                    // Remove all existing item rows from DOM (excluding category headers)
                     const clearCategory = (categoryElement) => {
                         Array.from(categoryElement.children).forEach(child => {
-                            if (!child.tagName.toLowerCase().includes('h2')) { // Keep the H2 category title
+                            if (child.tagName.toLowerCase() !== 'h2') {
                                 child.remove();
                             }
                         });
@@ -925,9 +919,9 @@
                     clearCategory(kitchenCategory);
                     clearCategory(otherCategory);
                     customItemsContainer.innerHTML = '';
-                    customItemCounter = 0; // Reset counter for new custom items
+                    customItemCounter = 0;
 
-                    // Re-render predefined items in their initial state
+                    // Re-render predefined items in their initial (unchecked, default price) state
                     predefinedItems.forEach(item => {
                         const itemRow = createItemRow(item);
                         itemRow.dataset.itemType = 'predefined';
@@ -939,10 +933,10 @@
                             otherCategory.appendChild(itemRow);
                         }
                     });
-
-                    saveCurrentListState(); // Save the cleared state
+                    saveCurrentListState(); // Save the now empty/defaulted state
                 }
             });
+
 
             saveButton.addEventListener('click', () => {
                 saveCurrentListState();
