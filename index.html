@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Essentials</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* Basic Reset & Body Styling */
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f6; /* Light gray background */
+            color: #333;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .app-header {
+            background-color: #4CAF50; /* Green primary color */
+            color: #fff;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.5em; /* Adjust for mobile readability */
+            font-weight: 500;
+        }
+
+        .list-navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 5px;
+        }
+
+        .list-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .list-btn.active, .list-btn:hover {
+            background-color: #fff;
+            color: #4CAF50;
+            border-color: #fff;
+        }
+
+        /* Main Container */
+        .app-container {
+            flex-grow: 1; /* Allows main content to fill available space */
+            padding: 15px 20px 120px; /* Padding for bottom navbar */
+            max-width: 600px; /* Max width for larger screens */
+            margin: 0 auto; /* Center content */
+            width: 100%; /* Ensure it takes full width on small screens */
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        /* Item Categories */
+        .item-category {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .item-category h2 {
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-weight: 500;
+        }
+
+        /* Item Row Styling */
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #f0f0f0;
+            position: relative; /* For the delete button positioning */
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-checkbox-label {
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allows label to take available space */
+            cursor: pointer;
+        }
+
+        /* Custom Checkbox Styling (hide default, create custom) */
+        .item-checkbox {
+            /* Hide default checkbox */
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .item-checkbox + .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 10px;
+            position: relative;
+            transition: background-color 0.2s, border-color 0.2s;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .item-checkbox:checked + .custom-checkbox {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .item-checkbox:checked + .custom-checkbox::after {
+            content: '\2713'; /* Checkmark character */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+        }
+
+        .item-name {
+            font-size: 1em;
+            margin-right: 10px; /* Space between name and price */
+            color: #555;
+            font-weight: 400;
+        }
+
+        .price-input-wrapper {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin-left: auto; /* Push to the right */
+        }
+
+        .currency {
+            font-size: 0.9em;
+            color: #666;
+            margin-right: 5px;
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .item-price-input {
+            width: 80px; /* Fixed width for price input */
+            padding: 8px 8px 8px 25px; /* Left padding for currency symbol */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95em;
+            text-align: right; /* Align numbers to the right */
+            -moz-appearance: textfield; /* Remove number input arrows for Firefox */
+        }
+
+        /* Hide arrows for Chrome, Safari, Edge */
+        .item-price-input::-webkit-outer-spin-button,
+        .item-price-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+
+        /* Add New Item Section */
+        .add-item-section {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .add-item-form {
+            display: flex;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .add-item-form input[type="text"],
+        .add-item-form input[type="number"] {
+            flex-grow: 1; /* Allow inputs to grow */
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            min-width: 120px; /* Minimum width before wrapping */
+        }
+
+        .add-item-form .price-input-wrapper {
+            flex-grow: 1;
+            min-width: 100px;
+            margin-left: 0; /* Reset margin for this context */
+        }
+
+        .add-item-form .price-input-wrapper .currency {
+            left: 12px; /* Adjust for standard padding */
+        }
+
+        .add-item-form input[type="number"] {
+            padding-left: 35px; /* Space for currency symbol */
+        }
+
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .primary-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Custom Items List */
+        .custom-items-list {
+            margin-top: 10px;
+        }
+
+        .custom-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Space between item and delete */
+            padding: 10px 0;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+
+        .custom-item-row:last-child {
+            border-bottom: none;
+        }
+
+        .custom-item-row .item-checkbox-label {
+            flex-grow: 1;
+        }
+
+        .delete-item-btn {
+            background: none;
+            border: none;
+            color: #ff4d4f; /* Red for delete */
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 5px; /* Increase tap area */
+            border-radius: 50%; /* Make it round */
+            transition: background-color 0.2s ease;
+        }
+
+        .delete-item-btn:hover {
+            background-color: #ffe8e6;
+        }
+
+        /* Footer (Fixed Navbar) */
+        .app-footer {
+            background-color: #333;
+            color: #fff;
+            padding: 15px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .total-price-display {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffe082; /* Light yellow for total */
+        }
+
+        .total-price-display .currency {
+            position: static; /* Override absolute positioning */
+            transform: none;
+            font-size: 1em; /* Match parent */
+            color: inherit; /* Inherit color from parent */
+            margin-right: 0;
+        }
+
+        .bottom-navbar {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.8em;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 8px;
+            min-width: 80px; /* Ensure buttons are wide enough */
+        }
+
+        .nav-btn:hover {
+            background-color: #555;
+        }
+
+        .nav-btn i {
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+
+        /* Media Queries for responsiveness */
+        @media (max-width: 480px) {
+            .app-header h1 {
+                font-size: 1.3em;
+            }
+
+            .app-container {
+                padding: 10px 15px 120px; /* Adjust padding for smaller screens */
+            }
+
+            .item-category h2 {
+                font-size: 1.1em;
+            }
+
+            .item-name {
+                font-size: 0.95em;
+            }
+
+            .item-price-input {
+                width: 70px; /* Slightly smaller input for compact screens */
+                padding: 6px 6px 6px 20px;
+                font-size: 0.9em;
+            }
+
+            .add-item-form {
+                flex-direction: column; /* Stack inputs vertically on very small screens */
+                align-items: stretch;
+            }
+
+            .add-item-form input[type="text"],
+            .add-item-form input[type="number"],
+            .add-item-form .price-input-wrapper {
+                min-width: unset; /* Remove min-width when stacked */
+                width: 100%;
+                box-sizing: border-box; /* Ensure padding is included */
+            }
+
+            .add-item-form .price-input-wrapper .currency {
+                left: 12px;
+            }
+
+            .nav-btn {
+                font-size: 0.75em;
+                min-width: 70px;
+            }
+
+            .nav-btn i {
+                font-size: 1.2em;
+            }
+
+            .total-price-display {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>Home Essentials</h1>
+        <div class="list-navigation" id="listNavigation">
+            <button class="list-btn active" data-list="list1">List 1</button>
+            <button class="list-btn" data-list="list2">List 2</button>
+            <button class="list-btn" data-list="list3">List 3</button>
+            <button class="list-btn" id="addListBtn"><i class="fas fa-plus"></i></button>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <section class="item-category" id="appliances-category">
+            <h2>Appliances</h2>
+            </section>
+
+        <section class="item-category" id="kitchen-category">
+            <h2>Kitchen & Utensils</h2>
+            </section>
+
+        <section class="item-category" id="other-category">
+            <h2>Other Essentials</h2>
+            </section>
+
+        <section class="add-item-section">
+            <h2>Add New Item</h2>
+            <div class="add-item-form">
+                <input type="text" id="newItemName" placeholder="Item name (e.g., Bookshelf)">
+                <div class="price-input-wrapper">
+                    <span class="currency">₹</span>
+                    <input type="number" id="newItemPrice" placeholder="Price (optional)">
+                </div>
+                <button id="addItemButton" class="btn primary-btn">Add</button>
+            </div>
+            <div id="custom-items" class="custom-items-list">
+                </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="total-price-display">
+            Total Price: <span class="currency">₹</span><span id="totalPrice">0</span>
+        </div>
+        <nav class="bottom-navbar">
+            <button id="saveButton" class="nav-btn">
+                <i class="fas fa-save"></i>
+                <span>Save</span>
+            </button>
+            <button id="totalSummaryButton" class="nav-btn">
+                <i class="fas fa-list-alt"></i>
+                <span>Total</span>
+            </button>
+            <button id="resetButton" class="nav-btn">
+                <i class="fas fa-sync-alt"></i>
+                <span>Reset</span>
+            </button>
+        </nav>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appliancesCategory = document.getElementById('appliances-category');
+            const kitchenCategory = document.getElementById('kitchen-category');
+            const otherCategory = document.getElementById('other-category');
+            const totalPriceSpan = document.getElementById('totalPrice');
+            const newItemNameInput = document.getElementById('newItemName');
+            const newItemPriceInput = document.getElementById('newItemPrice');
+            const addItemButton = document.getElementById('addItemButton');
+            const customItemsContainer = document.getElementById('custom-items');
+            const resetButton = document.getElementById('resetButton');
+            const saveButton = document.getElementById('saveButton');
+            const totalSummaryButton = document.getElementById('totalSummaryButton');
+            const listNavigation = document.getElementById('listNavigation');
+            const addListBtn = document.getElementById('addListBtn');
+
+            let currentTotalPrice = 0;
+            let customItemCounter = 0; // To give unique IDs to custom items
+            let activeListKey = 'list1'; // Default active list
+
+            // --- Pre-defined item list ---
+            const predefinedItems = [
+                // Appliances
+                { id: 'induction', name: 'Induction', price: 3000, category: 'appliances', type: 'appliance' },
+                { id: 'refrigerator', name: 'Refrigerator', price: 25000, category: 'appliances', type: 'appliance' },
+                { id: 'washingMachine', name: 'Washing Machine', price: 30000, category: 'appliances', type: 'appliance' },
+                { id: 'inverter', name: 'Inverter', price: 25000, category: 'appliances', type: 'appliance' },
+                { id: 'coolerAc', name: 'Cooler / AC', price: null, category: 'appliances', type: 'appliance' }, // Price to be entered by user
+
+                // Kitchen & Utensils
+                { id: 'cooker', name: 'Cooker', price: 3000, category: 'kitchen' },
+                { id: 'teaPan', name: 'Tea Pan', price: 300, category: 'kitchen' },
+                { id: 'caneyMilk', name: 'Caney for Milk', price: 400, category: 'kitchen' },
+                { id: 'spatula', name: 'Spatula', price: 150, category: 'kitchen' },
+                { id: 'frySkimmer', name: 'Fry Skimmer', price: 250, category: 'kitchen' },
+                { id: 'knife', name: 'Knife', price: 150, category: 'kitchen' },
+                { id: 'spoon', name: 'Spoon', price: 150, category: 'kitchen' },
+                { id: 'forkSpoon', name: 'Fork Spoon', price: 150, category: 'kitchen' },
+                { id: 'tray', name: 'Tray', price: 250, category: 'kitchen' },
+                { id: 'teaCups', name: 'Tea cups', price: 500, category: 'kitchen' },
+                { id: 'utensilsStandSteel', name: 'Utensils Stand Steel', price: 2000, category: 'kitchen' },
+                { id: 'fourPlate', name: '4 - Plate', price: 500, category: 'kitchen' },
+                { id: 'twoSmallPlates', name: '2 - Small Plates', price: 200, category: 'kitchen' },
+                { id: 'twoBowl', name: '2 - Bowl', price: 600, category: 'kitchen' },
+                { id: 'dinnerSet', name: 'Dinner Set', price: 3500, category: 'kitchen' },
+                { id: 'juicerMixer', name: 'Juicer / Mixer (Sujata)', price: 5500, category: 'kitchen' },
+                { id: 'grater', name: 'Grater', price: 250, category: 'kitchen' },
+                { id: 'chopper', name: 'Chopper', price: 250, category: 'kitchen' },
+                { id: 'gasStove', name: 'Gas Stove (2 burner)', price: 4000, category: 'kitchen' },
+                { id: 'sixBowlSteel', name: '6 - Bowl steel', price: 600, category: 'kitchen' },
+                { id: 'sixPlateSteel', name: '6 - Plate steel', price: 600, category: 'kitchen' },
+                { id: 'glassSteel', name: 'glass steel', price: 600, category: 'kitchen' },
+                { id: 'jug', name: 'Jug', price: 500, category: 'kitchen' },
+                { id: 'masalaBox', name: 'Masala Box', price: 250, category: 'kitchen' },
+
+                // Other Essentials
+                { id: 'dustbin', name: 'Dustbin', price: 250, category: 'other' },
+            ];
+
+            // --- Local Storage Management ---
+            const LOCAL_STORAGE_PREFIX = 'homeEssentials_';
+
+            const saveCurrentListState = () => {
+                const listState = {
+                    items: [],
+                    customItems: []
+                };
+
+                // Capture state of predefined items
+                document.querySelectorAll('.item-row').forEach(row => {
+                    const itemId = row.dataset.itemId;
+                    const checkbox = row.querySelector('.item-checkbox');
+                    const priceInput = row.querySelector('.item-price-input');
+                    const itemType = row.dataset.itemType; // 'predefined' or 'custom'
+
+                    if (itemType === 'custom') {
+                        listState.customItems.push({
+                            id: itemId,
+                            name: row.querySelector('.item-name').textContent,
+                            price: parseFloat(priceInput.value) || null, // Store null if empty/invalid
+                            checked: checkbox.checked
+                        });
+                    } else {
+                        // For predefined items, only save if checked OR if it's an appliance with a custom price
+                        // OR if it's an appliance where price was initially null and user entered something
+                        const originalItem = predefinedItems.find(item => item.id === itemId);
+                        const currentPrice = parseFloat(priceInput.value) || null;
+
+                        if (checkbox.checked || (originalItem && originalItem.price === null && currentPrice !== null) || (originalItem && originalItem.price !== currentPrice)) {
+                             listState.items.push({
+                                id: itemId,
+                                price: currentPrice,
+                                checked: checkbox.checked
+                            });
+                        }
+                    }
+                });
+                localStorage.setItem(LOCAL_STORAGE_PREFIX + activeListKey, JSON.stringify(listState));
+                console.log(`State saved for ${activeListKey}`);
+            };
+
+            const loadListState = (listKey) => {
+                const savedState = localStorage.getItem(LOCAL_STORAGE_PREFIX + listKey);
+                currentTotalPrice = 0;
+                
+                // Clear all current items (predefined and custom)
+                appliancesCategory.innerHTML = '<h2>Appliances</h2>';
+                kitchenCategory.innerHTML = '<h2>Kitchen & Utensils</h2>';
+                otherCategory.innerHTML = '<h2>Other Essentials</h2>';
+                customItemsContainer.innerHTML = '';
+                customItemCounter = 0; // Reset for new custom items
+
+                // Re-render predefined items first with their original values
+                predefinedItems.forEach(item => {
+                    const itemRow = createItemRow(item);
+                    itemRow.dataset.itemType = 'predefined'; // Mark as predefined
+                    if (item.category === 'appliances') {
+                        appliancesCategory.appendChild(itemRow);
+                    } else if (item.category === 'kitchen') {
+                        kitchenCategory.appendChild(itemRow);
+                    } else if (item.category === 'other') {
+                        otherCategory.appendChild(itemRow);
+                    }
+                });
+
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+
+                    // Apply saved state to predefined items
+                    parsedState.items.forEach(savedItem => {
+                        const itemRow = document.querySelector(`[data-item-id="${savedItem.id}"]`);
+                        if (itemRow) {
+                            const checkbox = itemRow.querySelector('.item-checkbox');
+                            const priceInput = itemRow.querySelector('.item-price-input');
+                            
+                            checkbox.checked = savedItem.checked;
+                            
+                            // If a price was saved, update the input field and data-item-price
+                            if (savedItem.price !== null) {
+                                priceInput.value = savedItem.price;
+                                itemRow.dataset.itemPrice = savedItem.price;
+                            } else {
+                                priceInput.value = ''; // Ensure it's empty if saved as null
+                                itemRow.dataset.itemPrice = null;
+                            }
+
+                            // If item is checked, add its current price to total
+                            if (checkbox.checked) {
+                                const price = parseFloat(itemRow.dataset.itemPrice);
+                                if (!isNaN(price) && price > 0) {
+                                    currentTotalPrice += price;
+                                }
+                            }
+                        }
+                    });
+
+                    // Load custom items
+                    parsedState.customItems.forEach(customItemData => {
+                        // Ensure unique IDs for loaded custom items if counter was reset
+                        customItemCounter = Math.max(customItemCounter, parseInt(customItemData.id.split('-')[1] || 0));
+
+                        const customItem = {
+                            id: customItemData.id,
+                            name: customItemData.name,
+                            price: customItemData.price,
+                            category: 'custom',
+                            type: 'custom',
+                            defaultChecked: customItemData.checked
+                        };
+                        const itemRow = createItemRow(customItem);
+                        customItemsContainer.appendChild(itemRow);
+                        
+                        // Manually set checked state and update total
+                        const checkbox = itemRow.querySelector('.item-checkbox');
+                        if(checkbox.checked) {
+                             const price = parseFloat(itemRow.dataset.itemPrice);
+                             if (!isNaN(price) && price > 0) {
+                                 currentTotalPrice += price;
+                             }
+                        }
+                    });
+                    customItemCounter++; // Increment for the next new custom item
+                }
+                updateTotal();
+            };
+
+            // --- UI Functions ---
+            const updateTotal = () => {
+                totalPriceSpan.textContent = currentTotalPrice.toLocaleString('en-IN'); // Format for Indian Rupees
+            };
+
+            // Function to create an item row
+            const createItemRow = (item) => {
+                const itemRow = document.createElement('div');
+                itemRow.className = `item-row ${item.type === 'custom' ? 'custom-item-row' : ''}`;
+                itemRow.dataset.itemId = item.id;
+                itemRow.dataset.itemType = item.type || 'predefined'; // Set data type
+                itemRow.dataset.itemPrice = item.price; // Store price as data attribute
+
+                const checkboxId = `item-${item.id}`;
+                const initialPriceValue = item.price !== null ? item.price : '';
+                const isPriceReadonly = item.price !== null && item.type !== 'custom'; // Custom items are always editable
+
+                itemRow.innerHTML = `
+                    <label for="${checkboxId}" class="item-checkbox-label">
+                        <input type="checkbox" id="${checkboxId}" class="item-checkbox" ${item.defaultChecked ? 'checked' : ''}>
+                        <span class="custom-checkbox"></span>
+                        <span class="item-name">${item.name}</span>
+                    </label>
+                    <div class="price-input-wrapper">
+                        <span class="currency">₹</span>
+                        <input type="number"
+                               class="item-price-input"
+                               value="${initialPriceValue}"
+                               placeholder="${item.price === null ? 'Enter Price (optional)' : ''}"
+                               ${isPriceReadonly ? 'readonly' : ''}>
+                    </div>
+                    ${item.type === 'custom' ? '<button class="delete-item-btn"><i class="fas fa-trash-alt"></i></button>' : ''}
+                `;
+
+                const checkbox = itemRow.querySelector(`#${checkboxId}`);
+                const priceInput = itemRow.querySelector('.item-price-input');
+                const deleteButton = itemRow.querySelector('.delete-item-btn');
+
+                checkbox.addEventListener('change', () => {
+                    const newPrice = parseFloat(priceInput.value);
+                    if (checkbox.checked) {
+                        if (!isNaN(newPrice) && newPrice > 0) {
+                            currentTotalPrice += newPrice;
+                        } else if (priceInput.value.trim() !== '') { // If a non-numeric value was entered, alert
+                            checkbox.checked = false;
+                            alert('Please enter a valid positive price, or leave it empty.');
+                        } else { // Price is empty, but item is checked. Treat as 0 for calculation.
+                            // No change to total
+                        }
+                    } else { // Unchecked
+                        if (!isNaN(newPrice) && newPrice > 0) {
+                            currentTotalPrice -= newPrice;
+                        }
+                    }
+                    updateTotal();
+                    saveCurrentListState(); // Save state on every change
+                });
+
+                priceInput.addEventListener('input', () => {
+                    // Update the data attribute immediately to reflect current value for calculations
+                    itemRow.dataset.itemPrice = priceInput.value.trim() === '' ? null : parseFloat(priceInput.value);
+
+                    // If checked, recalculate total based on new input
+                    if (checkbox.checked) {
+                        let oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
+                        let currentInputPrice = parseFloat(priceInput.value);
+
+                        if (!isNaN(currentInputPrice) && currentInputPrice > 0) {
+                            currentTotalPrice = currentTotalPrice - oldPrice + currentInputPrice;
+                            itemRow.dataset.lastValidPrice = currentInputPrice; // Store for next change
+                        } else if (oldPrice > 0) { // If input became invalid/empty, subtract old valid price
+                            currentTotalPrice -= oldPrice;
+                            itemRow.dataset.lastValidPrice = 0; // Reset last valid price
+                        }
+                    }
+                    updateTotal();
+                    saveCurrentListState(); // Save state on every input
+                });
+
+                priceInput.addEventListener('blur', () => {
+                    const value = priceInput.value.trim();
+                    if (value !== '') {
+                        const numericValue = parseFloat(value);
+                        if (isNaN(numericValue) || numericValue < 0) { // Allow 0, but discourage negative
+                            priceInput.value = ''; // Clear invalid input
+                            itemRow.dataset.itemPrice = null; // Update data attribute
+                            // If checkbox was checked, uncheck it and remove its contribution
+                            if (checkbox.checked) {
+                                checkbox.checked = false;
+                                const oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
+                                currentTotalPrice -= oldPrice;
+                                itemRow.dataset.lastValidPrice = 0;
+                                updateTotal();
+                            }
+                            alert('Please enter a valid non-negative number for the price, or leave it empty.');
+                        } else if (numericValue === 0) {
+                            // If user explicitly enters 0, treat it as such
+                            itemRow.dataset.itemPrice = 0;
+                            if (checkbox.checked && parseFloat(itemRow.dataset.lastValidPrice || 0) > 0) {
+                                currentTotalPrice -= parseFloat(itemRow.dataset.lastValidPrice);
+                                itemRow.dataset.lastValidPrice = 0;
+                            }
+                            updateTotal();
+                        } else {
+                            // Valid number, update lastValidPrice
+                             itemRow.dataset.lastValidPrice = numericValue;
+                        }
+                    } else {
+                        // Input is empty. If checked, subtract any previously valid price.
+                        itemRow.dataset.itemPrice = null;
+                        if (checkbox.checked) {
+                            const oldPrice = parseFloat(itemRow.dataset.lastValidPrice || 0);
+                            currentTotalPrice -= oldPrice;
+                            itemRow.dataset.lastValidPrice = 0; // Reset
+                            updateTotal();
+                        }
+                    }
+                    saveCurrentListState();
+                });
+
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', () => {
+                        if (checkbox.checked) {
+                            const price = parseFloat(priceInput.value) || 0;
+                            currentTotalPrice -= price;
+                        }
+                        itemRow.remove();
+                        updateTotal();
+                        saveCurrentListState(); // Save state after deleting
+                    });
+                }
+                
+                // Set initial lastValidPrice for checked items
+                if (checkbox.checked) {
+                    const initialPrice = parseFloat(priceInput.value);
+                    if (!isNaN(initialPrice) && initialPrice > 0) {
+                        itemRow.dataset.lastValidPrice = initialPrice;
+                    } else {
+                        itemRow.dataset.lastValidPrice = 0;
+                    }
+                }
+
+                return itemRow;
+            };
+
+            // --- List Navigation Logic ---
+            let listCounter = 3; // Start from 3 because List1, List2, List3 are initial
+
+            const createListButton = (listName, key) => {
+                const button = document.createElement('button');
+                button.className = 'list-btn';
+                button.dataset.list = key;
+                button.textContent = listName;
+                listNavigation.insertBefore(button, addListBtn); // Insert before "Add List" button
+
+                button.addEventListener('click', () => {
+                    switchList(key);
+                });
+            };
+
+            const switchList = (newListKey) => {
+                // Save current list's state before switching
+                saveCurrentListState();
+
+                // Deactivate current active button
+                document.querySelector(`.list-btn.active`)?.classList.remove('active');
+
+                // Activate new button
+                document.querySelector(`[data-list="${newListKey}"]`)?.classList.add('active');
+
+                activeListKey = newListKey;
+                loadListState(activeListKey);
+            };
+
+            const initializeListNavigation = () => {
+                // Create initial list buttons (if not already there by HTML)
+                // This assumes List1, List2, List3 are already in HTML
+                const existingListBtns = document.querySelectorAll('.list-btn[data-list^="list"]');
+                existingListBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchList(btn.dataset.list);
+                    });
+                });
+
+                // Load all existing list keys from local storage to re-create buttons
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith(LOCAL_STORAGE_PREFIX) && !key.includes('list1') && !key.includes('list2') && !key.includes('list3')) {
+                        const listId = key.replace(LOCAL_STORAGE_PREFIX, '');
+                        // Check if a button for this list already exists to avoid duplicates
+                        if (!document.querySelector(`[data-list="${listId}"]`)) {
+                             const listNum = parseInt(listId.replace('list', ''));
+                             if (!isNaN(listNum)) {
+                                 createListButton(`List ${listNum}`, listId);
+                                 listCounter = Math.max(listCounter, listNum);
+                             }
+                        }
+                    }
+                }
+
+                // Set initial active list
+                const storedActiveList = localStorage.getItem('activeList');
+                if (storedActiveList && document.querySelector(`[data-list="${storedActiveList}"]`)) {
+                    switchList(storedActiveList);
+                } else {
+                    switchList('list1'); // Default to list1
+                }
+            };
+
+            addListBtn.addEventListener('click', () => {
+                listCounter++;
+                const newListKey = `list${listCounter}`;
+                createListButton(`List ${listCounter}`, newListKey);
+                switchList(newListKey);
+            });
+
+            // --- Event Listeners ---
+            addItemButton.addEventListener('click', () => {
+                const name = newItemNameInput.value.trim();
+                const price = parseFloat(newItemPriceInput.value) || null; // Price can be null if empty
+
+                if (!name) {
+                    alert('Please enter an item name.');
+                    return;
+                }
+                // If price is entered, validate it
+                if (newItemPriceInput.value.trim() !== '' && (isNaN(price) || price < 0)) {
+                    alert('Please enter a valid non-negative price, or leave it empty.');
+                    return;
+                }
+
+                customItemCounter++;
+                const customItem = {
+                    id: `custom-${customItemCounter}`,
+                    name: name,
+                    price: price,
+                    category: 'custom',
+                    type: 'custom',
+                    defaultChecked: true // Auto-check new items
+                };
+
+                const itemRow = createItemRow(customItem);
+                customItemsContainer.appendChild(itemRow);
+
+                // Manually trigger change for the newly added item's checkbox
+                // This ensures its price is immediately added to total
+                const newCheckbox = itemRow.querySelector('.item-checkbox');
+                if (newCheckbox) {
+                    newCheckbox.checked = true; // Ensure it's checked
+                    const event = new Event('change');
+                    newCheckbox.dispatchEvent(event);
+                }
+
+                newItemNameInput.value = '';
+                newItemPriceInput.value = '';
+                // updateTotal() and saveCurrentListState() are called by the checkbox change event
+            });
+
+            resetButton.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset the current list (all selections and custom items)?')) {
+                    currentTotalPrice = 0;
+                    updateTotal();
+
+                    // Remove all existing item rows from DOM (excluding category headers)
+                    const clearCategory = (categoryElement) => {
+                        Array.from(categoryElement.children).forEach(child => {
+                            if (!child.tagName.toLowerCase().includes('h2')) { // Keep the H2 category title
+                                child.remove();
+                            }
+                        });
+                    }
+
+                    clearCategory(appliancesCategory);
+                    clearCategory(kitchenCategory);
+                    clearCategory(otherCategory);
+                    customItemsContainer.innerHTML = '';
+                    customItemCounter = 0; // Reset counter for new custom items
+
+                    // Re-render predefined items in their initial state
+                    predefinedItems.forEach(item => {
+                        const itemRow = createItemRow(item);
+                        itemRow.dataset.itemType = 'predefined';
+                        if (item.category === 'appliances') {
+                            appliancesCategory.appendChild(itemRow);
+                        } else if (item.category === 'kitchen') {
+                            kitchenCategory.appendChild(itemRow);
+                        } else if (item.category === 'other') {
+                            otherCategory.appendChild(itemRow);
+                        }
+                    });
+
+                    saveCurrentListState(); // Save the cleared state
+                }
+            });
+
+            saveButton.addEventListener('click', () => {
+                saveCurrentListState();
+                localStorage.setItem('activeList', activeListKey); // Save current active list
+                alert(`List "${activeListKey}" saved successfully!`);
+            });
+
+            totalSummaryButton.addEventListener('click', () => {
+                alert(`Your current total for ${activeListKey} is: ₹${currentTotalPrice.toLocaleString('en-IN')}\n\n(This button could show a detailed item-by-item breakdown or navigate to a summary page.)`);
+            });
+
+            // --- Initial Load ---
+            initializeListNavigation();
+            // loadListState for the activeListKey is called inside initializeListNavigation
+        });
+    </script>
+</body>
+</html>
